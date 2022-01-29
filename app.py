@@ -12,12 +12,7 @@ from pyfcm import FCMNotification
 # import statements for data science packages
 import pandas as pd
 import networkx as nx
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
 import pandas as pd
-from sklearn.metrics.cluster import normalized_mutual_info_score
-from sklearn.metrics.cluster import adjusted_rand_score
-from itertools import combinations
 import uuid
 
 app = Flask(__name__)

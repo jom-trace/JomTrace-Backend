@@ -4,6 +4,10 @@ from flask_pymongo import PyMongo
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 from flask import jsonify, request
+import requests
+import json
+from pyfcm import FCMNotification
+
 
 # import statements for data science packages
 import pandas as pd
@@ -23,6 +27,9 @@ app.secret_key = "secretkey"
 app.config['MONGO_URI'] = "mongodb+srv://jomtrace:jomtrace123@cluster0.gvczc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
 mongo = PyMongo(app)
+
+push_service = FCMNotification(
+    api_key="AAAAxHy9O20:APA91bEFbzTh-DuDjwpsVxQI157V_LB7xiENnIKxLdJ0kpIdfQnH9RBi-DHTWwBcGPGpBWeNk7n3n4-5CD5gu0A4TSWKSdcaiPYOb6KZZILF76Vju9uAYSbBiX6lNZWzGt_HBLnnGxli")
 
 
 @app.route('/', methods=['GET'])
@@ -48,24 +55,56 @@ def get_centrality():
 def add_user():
     _json = request.json
     _uid = _json['uid']
+    _username = _json['username']
+    _mobile = _json['HpNo']
+    _vaccinated = _json['vaccinated']
+    _deviceToken = _json['deviceToken']
+    _uuid = str(uuid.uuid4())
 
     if _uid and request.method == 'POST':
-        id = mongo.db.user.insert_one({'uid': _uid, 'uuid': str(uuid.uuid4())})
-        resp = jsonify("User added successfully")
+        id = mongo.db.user.insert_one({'uid': _uid, 'uuid': _uuid, 'username': _username, 'mobile': _mobile,
+                                      'vaccinated': _vaccinated, 'deviceToken': _deviceToken, 'status': 'negative'})
+        resp = jsonify(_uuid)
         resp.status_code = 200
         return resp
     else:
         not_found()
 
 
-@app.route("/uploadContactDetails", methods=['PATCH'])
+@app.route("/getUser", methods=['GET'])
+def fetch_user():
+    _json = request.json
+    _uid = _json['uid']
+
+    if _uid and request.method == 'GET':
+        id = mongo.db.user.find({'uid': _uid})
+        resp = dumps(id)
+
+        return resp
+    else:
+        not_found()
+
+
+@app.route("/pushnotification", methods=['POST'])
+def push_exposure():
+
+    registration_ids = ["deavjCAHS5CBPNCZ1kzt9Y:APA91bEsLcCPSJs6Ix_RtH3NKcGgG3AygWxsO7B5WiOk-JGPWSVOD5nVEg-4r5XTjjXf-ItR3XAn9tPEgHzD7L8OkUo6uyZKM_LFOxBeOXftsGYix5aMGWZas2qbPrkIrV_2swcxPztt",
+                        "e8BzvAMjRTeAUeZYdZty0V:APA91bEtuCZNdKi_p5s0CImmxvsowafdY8UgxuvobXMIuszTjU3epDEQuliHbHM5aThQgvEUb4Qg8_HkEAbHMW5Cj1ftNceDL-1ne8XDvlj19ylsD0gjX1-vdSHOWk0Is1RZ-5PD3wmG"]
+    message_title = "Jom tracing"
+    message_body = "Please wear a mask"
+    result = push_service.notify_multiple_devices(
+        registration_ids=registration_ids, message_title=message_title, message_body=message_body)
+    return(jsonify(result.json()))
+
+
+@app.route("/uploadContactDetails", methods=['POST'])
 def upload_details():
     _json = request.json
     _uuid = _json['uuid']
     _closeContact = _json['closeContact']
     _locationVisited = _json['locationVisited']
 
-    if _uuid and _closeContact and _locationVisited and request.method == 'PATCH':
+    if _uuid and _closeContact and _locationVisited and request.method == 'POST':
         id = mongo.db.user.find_one_and_update({'uuid': _uuid}, {
                                                "$set": {"closeContact": _closeContact, "locationVisited": _locationVisited}})
         resp = jsonify("User added successfully")

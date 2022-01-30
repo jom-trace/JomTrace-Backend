@@ -27,7 +27,7 @@ push_service = FCMNotification(
     api_key="AAAAxHy9O20:APA91bEFbzTh-DuDjwpsVxQI157V_LB7xiENnIKxLdJ0kpIdfQnH9RBi-DHTWwBcGPGpBWeNk7n3n4-5CD5gu0A4TSWKSdcaiPYOb6KZZILF76Vju9uAYSbBiX6lNZWzGt_HBLnnGxli")
 
 
-@app.route('/', methods=['GET'])
+@app.route('/getCentrality', methods=['GET'])
 def get_centrality():
     if request.method == 'GET':
         data = pd.read_csv("covid-19 transmission.csv")
@@ -102,11 +102,37 @@ def upload_details():
     if _uuid and _closeContact and _locationVisited and request.method == 'POST':
         id = mongo.db.user.find_one_and_update({'uuid': _uuid}, {
                                                "$set": {"closeContact": _closeContact, "locationVisited": _locationVisited}})
-        resp = jsonify("User added successfully")
+        notifyUsers = []
+        print(_closeContact)
+        for contact in _closeContact:
+            notifyUsers.append(contact.uuid)
+
+        suspectedIndividuals = mongo.db.user.find(
+            {"uuid": {"$in": notifyUsers}})
+
+        suspectedDeviceToken = []
+
+        for individuals in suspectedIndividuals:
+            suspectedDeviceToken.append(individuals.deviceToken)
+
+        message_title = "Exposure Notification"
+        message_body = "You have been suspected, please upload your details"
+        result = push_service.notify_multiple_devices(
+            registration_ids=suspectedDeviceToken, message_title=message_title, message_body=message_body)
+
+        resp = jsonify("Contact details added")
         resp.status_code = 200
         return resp
     else:
         not_found()
+
+
+@app.route("/getPatients", methods=['GET'])
+def getCovidUsers():
+    if request.method == 'GET':
+        infectedIndividuals = mongo.db.user.find({"status": {"$eq": 'negative'}})
+        resp = dumps(infectedIndividuals)
+        return resp
 
 
 @app.route("/createLocation", methods=['POST'])

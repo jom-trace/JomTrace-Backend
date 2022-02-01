@@ -36,10 +36,10 @@ def get_centrality():
         contactID = []
         for contact in _closeContact:
             contactID.append(contact['_uuid'])
-        
+
         d = {"To": contactID}
         data = pd.DataFrame(d)
-        data['From'] = _userID   
+        data['From'] = _userID
         graph = nx.from_pandas_edgelist(data, source="From", target="To")
         centrality = nx.degree_centrality(graph)
         type(centrality)
@@ -75,13 +75,11 @@ def add_user():
         not_found()
 
 
-@app.route("/getUser", methods=['GET'])
-def fetch_user():
-    _json = request.json
-    _uid = _json['uid']
+@app.route("/getUser/<id>", methods=['GET'])
+def fetch_user(id):
 
-    if _uid and request.method == 'GET':
-        id = mongo.db.user.find({'uid': _uid})
+    if id and request.method == 'GET':
+        id = mongo.db.user.find({'uid': id})
         resp = dumps(id)
 
         return resp

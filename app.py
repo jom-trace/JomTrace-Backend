@@ -27,10 +27,19 @@ push_service = FCMNotification(
     api_key="AAAAxHy9O20:APA91bEFbzTh-DuDjwpsVxQI157V_LB7xiENnIKxLdJ0kpIdfQnH9RBi-DHTWwBcGPGpBWeNk7n3n4-5CD5gu0A4TSWKSdcaiPYOb6KZZILF76Vju9uAYSbBiX6lNZWzGt_HBLnnGxli")
 
 
-@app.route('/getCentrality', methods=['GET'])
+@app.route('/getCentrality', methods=['POST'])
 def get_centrality():
-    if request.method == 'GET':
-        data = pd.read_csv("covid-19 transmission.csv")
+    _json = request.json
+    _closeContact = _json['closeContact']
+    _userID = _json['uuid']
+    if _closeContact and _userID and request.method == 'POST':
+        contactID = []
+        for contact in _closeContact:
+            contactID.append(contact['_uuid'])
+        
+        d = {"To": contactID}
+        data = pd.DataFrame(d)
+        data['From'] = _userID   
         graph = nx.from_pandas_edgelist(data, source="From", target="To")
         centrality = nx.degree_centrality(graph)
         type(centrality)
@@ -38,7 +47,7 @@ def get_centrality():
         max_value = max(all_values)
         centrality_items = list(centrality.items())
 
-        resp = jsonify(centrality_items)
+        resp = jsonify(centrality_items[1][1])
         resp.status_code = 200
 
         return resp
@@ -101,19 +110,22 @@ def upload_details():
 
     if _uuid and _closeContact and _locationVisited and request.method == 'POST':
         id = mongo.db.user.find_one_and_update({'uuid': _uuid}, {
-                                               "$set": {"closeContact": _closeContact, "locationVisited": _locationVisited}})
+                                               "$set": {"closeContact": _closeContact, "locationVisited": _locationVisited, "status": 'Positive'}})
         notifyUsers = []
-        print(_closeContact)
+
         for contact in _closeContact:
-            notifyUsers.append(contact.uuid)
+            notifyUsers.append(contact['_uuid'])
 
         suspectedIndividuals = mongo.db.user.find(
             {"uuid": {"$in": notifyUsers}})
 
-        suspectedDeviceToken = []
+        updateStatus = mongo.db.user.update_many(
+            {"uuid": {"$in": notifyUsers}}, {"$set": {"status": "Suspected"}})
 
+        suspectedDeviceToken = []
+        print(suspectedIndividuals[0])
         for individuals in suspectedIndividuals:
-            suspectedDeviceToken.append(individuals.deviceToken)
+            suspectedDeviceToken.append(individuals['deviceToken'])
 
         message_title = "Exposure Notification"
         message_body = "You have been suspected, please upload your details"
@@ -127,10 +139,28 @@ def upload_details():
         not_found()
 
 
+@app.route("/pushExposure", methods=['POST'])
+def pushExposureNotification():
+    _json = request.json
+    _closeContact = _json['closeContact']
+    _message_title = _json['messageTitle']
+    _message_body = _json['messageBody']
+
+    if _closeContact and _message_title and _message_body and request.method == 'POST':
+        result = push_service.notify_multiple_devices(
+            registration_ids=_closeContact, message_title=_message_title, message_body=_message_body)
+        resp = jsonify("Contact details added")
+        resp.status_code = 200
+        return resp
+    else:
+        not_found()
+
+
 @app.route("/getPatients", methods=['GET'])
 def getCovidUsers():
     if request.method == 'GET':
-        infectedIndividuals = mongo.db.user.find({"status": {"$eq": 'negative'}})
+        infectedIndividuals = mongo.db.user.find(
+            {"status": {"$eq": 'Positive'}})
         resp = dumps(infectedIndividuals)
         return resp
 

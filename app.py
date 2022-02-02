@@ -108,7 +108,7 @@ def upload_details():
 
     if _uuid and _closeContact and _locationVisited and request.method == 'POST':
         id = mongo.db.user.find_one_and_update({'uuid': _uuid}, {
-                                               "$set": {"closeContact": _closeContact, "locationVisited": _locationVisited, "status": 'Positive'}})
+                                               "$set": {"closeContact": json.loads(_closeContact), "locationVisited": json.loads(_locationVisited), "status": 'Positive'}})
         notifyUsers = []
 
         for contact in _closeContact:

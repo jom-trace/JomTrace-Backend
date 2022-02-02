@@ -112,7 +112,7 @@ def upload_details():
         notifyUsers = []
 
         for contact in _closeContact:
-            notifyUsers.append(contact['_uuid'])
+            notifyUsers.append(contact._uuid)
 
         suspectedIndividuals = mongo.db.user.find(
             {"uuid": {"$in": notifyUsers}})

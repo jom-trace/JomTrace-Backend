@@ -34,7 +34,7 @@ def get_centrality():
     _userID = _json['uuid']
     if _closeContact and _userID and request.method == 'POST':
         contactID = []
-        for contact in _closeContact:
+        for contact in json.loads(_closeContact):
             contactID.append(contact['_uuid'])
 
         d = {"To": contactID}

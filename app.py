@@ -110,7 +110,7 @@ def upload_details():
         id = mongo.db.user.find_one_and_update({'uuid': _uuid}, {
                                                "$set": {"closeContact": json.loads(_closeContact), "locationVisited": json.loads(_locationVisited), "status": 'Positive'}})
         notifyUsers = []
-
+        print(_closeContact)
         for contact in _closeContact:
             notifyUsers.append(contact._uuid)
 

@@ -111,7 +111,7 @@ def upload_details():
                                                "$set": {"closeContact": json.loads(_closeContact), "locationVisited": json.loads(_locationVisited), "status": 'Positive'}})
         notifyUsers = []
         print(_closeContact)
-        for contact in _closeContact:
+        for contact in json.loads(_closeContact):
             notifyUsers.append(contact._uuid)
 
         suspectedIndividuals = mongo.db.user.find(

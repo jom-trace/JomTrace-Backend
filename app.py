@@ -118,7 +118,7 @@ def upload_details():
             {"uuid": {"$in": notifyUsers}})
 
         updateStatus = mongo.db.user.update_many(
-            {"uuid": {"$in": notifyUsers}}, {"$set": {"status": "Suspected"}})
+            {"uuid": {"$in": notifyUsers}, "status": {"$eq": "negative"}}, {"$set": {"status": "Suspected"}})
 
         suspectedDeviceToken = []
         print(suspectedIndividuals[0])
@@ -135,7 +135,7 @@ def upload_details():
         return resp
     else:
         not_found()
-
+        
 
 @app.route("/pushExposure", methods=['POST'])
 def pushExposureNotification():

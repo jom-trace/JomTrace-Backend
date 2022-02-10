@@ -1,9 +1,16 @@
 # JomTrace-Backend
 
-#This is the backend for the JomTrace system. This system provides API endpoints to query the database and also push Firebase Cloud Messages.
-#This backend system built using Python and Flask framework
+This is the backend for the JomTrace system. This system provides API endpoints to query the database and also push Firebase Cloud Messages.
+This backend system built using Python and Flask framework
 
-#For me details, do visit the other repos
+Tech Stack
+1. Python
+2. Flask
+3. MongoDB
+4. Firebase Cloud Messaging
+5. NetworkX API
+
+For me details, do visit the other repos
 
 The JomTrace reference implementation comprises:
 - [JomTrace App (Repo)](https://github.com/Sharvin1106/BluetoothTracingApp)

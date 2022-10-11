@@ -1,0 +1,94 @@
+type MobileNumber {
+  countryCode: string
+  number: string
+}
+
+type Vaccination {
+  id: ID!
+  code: String!
+  dose: Number!
+  manufacturer: VaccineManufacturer!
+  date: String!
+}
+
+type Location {
+  id: ID!
+  city: String!
+  address1: String!
+  address2: String!
+  closed: Boolean!
+  capacity: Number!
+}
+
+type CloseContact {
+  id: ID!
+  uploader: User!
+  infected: User!
+  rssi: Number!
+  date: String!
+}
+
+type LocationVisited {
+  id: ID!
+  location: Location!
+  visitor: User!
+  date: String!
+}
+
+type Visitors {
+  id: ID!
+  location: Location!
+  count: Number!
+  date: String!
+}
+
+type User {
+  id: ID!
+  name: String!
+  bleID: String!
+  email: String!
+  password: String!
+  mobile: MobileNumber!
+  vaccination: [Vaccination]!
+  fcmToken: String!
+  status: CovidStatus!
+  closeContacts: [CloseContact!]
+  visitedLocations: [LocationVisited!]
+}
+
+type Query {
+  patients: [User!]!
+  user(id: ID!): User!
+}
+
+input CreateUserInput {
+  name: String!
+  bleID: String!
+  email: String!
+  password: String!
+  mobile: MobileNumber!
+}
+
+input CreateVaccinationDetailInput {
+  code: String!
+  dose: Number!
+  manufacturer: VaccineManufacturer!
+  date: String!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput): User
+  addVacinationDetail(input: CreateVaccinationDetailInput): Vaccination
+}
+
+enum VaccineManufacturer {
+  PFIZER
+  ASTRAZENACA
+  SINOVAC
+}
+
+enum CovidStatus {
+  POSITIVE
+  NEGATIVE
+  CLOSECONTACT
+}
